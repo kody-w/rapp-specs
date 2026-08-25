@@ -15,7 +15,8 @@ jobs:
       - run: |
           set -e
           python3 tools/sync.py
-          python3 brainify.py . rapp-specs --dogg --include specs
+          python3 tools/estate.py
+          python3 brainify.py . rapp-specs --dogg --include specs,estate
           python3 tools/verify_thread.py
           git config user.name "rapp-specs"
           git config user.email "actions@users.noreply.github.com"

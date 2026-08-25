@@ -1,0 +1,137 @@
+# Canonical files across the estate — 2026-08-25T22:32Z
+
+5 canonical file(s) carried by 110 repo(s) (source: rapp-map estate-map.json, built 2026-07-26).
+
+
+## `CONSTITUTION.md` — 24 carrier(s), 22 DIFFERENT shas — DRIFT
+- `kody-w/BillWhalenCopilotstudio` @ f5c6ec82e391
+- `kody-w/CommunityRAPP` @ d2e1e662ba3e
+- `kody-w/CommunityRAPP-archive` @ 4de9aa63c0b8
+- `kody-w/RAPP` @ aeb70e1e1030
+- `kody-w/RAPP-Agent-Repo` @ 89b6d03157ef
+- `kody-w/RAPP-Private-Workspace` @ 61d2a7a1d4ce
+- `kody-w/RAPP_Store` @ 43fff75c1062
+- `kody-w/RAPP_hippo` @ d2e1e662ba3e
+- `kody-w/RAR` @ 76c1a752ef09
+- `kody-w/aibast-agents-library` @ 0289fbd55824
+- `kody-w/first-principles-to-mars` @ a2fadf99b5af
+- `kody-w/mars-barn-opus` @ e49114d603de
+- `kody-w/mars-barn-opus-1` @ 8f2e8cfeabe4
+- `kody-w/microsoft-365-team` @ 8dd890384af0
+- `kody-w/neighborhood-example` @ 14b8b043578d
+- `kody-w/openrapp-desktop` @ 1058ef0a96a2
+- `kody-w/rapp-installer-dev` @ 7bc2c74da0fd
+- `kody-w/rapp-shape-aibast` @ 0289fbd55824
+- `kody-w/rapp2mcs` @ c52888c4a87d
+- `kody-w/rappter` @ eada0feec995
+- `kody-w/rappterbook` @ c80d4e22ed6b
+- `kody-w/rappterbook-vm` @ 6a73392d6b1e
+- `kody-w/rappterverse` @ aa15cc06b0b7
+- `kody-w/zion` @ dbca073f4519
+
+## `RAPP1_AUTHORITY.json` — 3 carrier(s), 3 DIFFERENT shas — DRIFT
+- `kody-w/RAPP` @ cdd99cba9d69
+- `kody-w/rapp-estate` @ c73d054052cf
+- `kody-w/rapp-map` @ 6ba4b606a8ba
+
+## `agents/basic_agent.py` — 64 carrier(s), 12 DIFFERENT shas — DRIFT
+- `kody-w/AI-Agent-Templates` @ fef5d4c58ab4
+- `kody-w/AI-Agent-Templates-Pilot` @ fef5d4c58ab4
+- `kody-w/AIGame` @ 53b56116b199
+- `kody-w/AIPatherfinder` @ fef5d4c58ab4
+- `kody-w/AITester` @ 53b56116b199
+- `kody-w/AI_Omni_Agent` @ fef5d4c58ab4
+- `kody-w/AgenticPlaygroundLab` @ 53b56116b199
+- `kody-w/AndriiTest` @ 53b56116b199
+- `kody-w/BillWhalenCopilotstudio` @ 53b56116b199
+- `kody-w/Business-Insight-Copilot` @ fef5d4c58ab4
+- `kody-w/C365Sept26th` @ 53b56116b199
+- `kody-w/C365Tester` @ 53b56116b199
+- `kody-w/CA365RoadmapAI` @ 53b56116b199
+- `kody-w/CommunityRAPP` @ 53b56116b199
+- `kody-w/CommunityRAPP-BW` @ 53b56116b199
+- `kody-w/CommunityRAPP-archive` @ 53b56116b199
+- `kody-w/Copilot-Advanced-Agent` @ e69de29bb2d1
+- `kody-w/Copilot-Agent-365` @ 53b56116b199
+- `kody-w/DigitalTwinAI` @ 53b56116b199
+- `kody-w/EntraCopilotAgent365` @ 53b56116b199
+- `kody-w/KodyAI` @ 53b56116b199
+- `kody-w/M365AgentDemoer` @ 53b56116b199
+- `kody-w/M365AgentSDKAI` @ 53b56116b199
+- `kody-w/MAC` @ fef5d4c58ab4
+- `kody-w/MACv1` @ fef5d4c58ab4
+- `kody-w/RAP` @ 53b56116b199
+- `kody-w/RAPPAIClaudeCodePlayground` @ 53b56116b199
+- `kody-w/RAPP_hippo` @ 53b56116b199
+- `kody-w/RAPPagent` @ 53b56116b199
+- `kody-w/RAPPtools` @ 2bded2e4ff93
+- `kody-w/Rapid-Agent-Prototype-Platform-RAPP` @ 53b56116b199
+- `kody-w/RoadmapCA365` @ 53b56116b199
+- `kody-w/TestAI` @ 53b56116b199
+- `kody-w/UniversalDataConnector365` @ 53b56116b199
+- `kody-w/UniversalDataConnectorAI` @ 53b56116b199
+- `kody-w/UniversalSyntheticDataAI` @ 53b56116b199
+- `kody-w/VIPWatcher` @ 53b56116b199
+- `kody-w/VoiceToCRM` @ 53b56116b199
+- `kody-w/ai-agent-templates-mirror` @ fef5d4c58ab4
+- `kody-w/ant-farm` @ 221ba132886a
+- `kody-w/automatic-lamp` @ 53b56116b199
+- `kody-w/braintrust-template` @ 6cd51b6693e0
+- `kody-w/cc-agents` @ 356e7ae9a74a
+- `kody-w/copilot-agent-365-v2` @ 6a5620c4e0bb
+- `kody-w/documents-to-copilot-studio` @ 221ba132886a
+- `kody-w/double-jump` @ 221ba132886a
+- `kody-w/localFirstTools` @ 2bded2e4ff93
+- `kody-w/localtoolsdev` @ 2bded2e4ff93
+- `kody-w/microsoft-se-team-neighborhood` @ 221ba132886a
+- `kody-w/microsoft-se-team-neighborhood-private` @ 221ba132886a
+- `kody-w/newTest` @ 53b56116b199
+- `kody-w/nexus-function-agents` @ 23c99977b2ca
+- `kody-w/private-workspace-template` @ 6cd51b6693e0
+- `kody-w/public-art-collective` @ 6cd51b6693e0
+- `kody-w/rapp-agents` @ 221ba132886a
+- `kody-w/rapp-agents-private` @ 221ba132886a
+- `kody-w/rapp-brainstem-walkthrough` @ 221ba132886a
+- `kody-w/rapp-store-archive` @ a34d8d58e40c
+- `kody-w/rappterbox` @ b95b14d1d442
+- `kody-w/tesasdfdsa` @ 53b56116b199
+- `kody-w/test` @ 53b56116b199
+- `kody-w/twin` @ e55e5054a33e
+- `kody-w/vbrainstem` @ 221ba132886a
+- `kody-w/wildhaven-ai-homes-twin` @ e55e5054a33e
+
+## `rapp_brainstem/agents/basic_agent.py` — 25 carrier(s), 2 DIFFERENT shas — DRIFT
+- `kody-w/RAPP` @ 221ba132886a
+- `kody-w/RAPP-Private-Workspace` @ b95b14d1d442
+- `kody-w/aibast-agents-library` @ 221ba132886a
+- `kody-w/fantastic-computing-machine` @ 221ba132886a
+- `kody-w/heimdall` @ 221ba132886a
+- `kody-w/kody-twin` @ 221ba132886a
+- `kody-w/pkstop-central-park-bandshell` @ 221ba132886a
+- `kody-w/pkstop-national-mall` @ 221ba132886a
+- `kody-w/pkstop-pike-place-market` @ 221ba132886a
+- `kody-w/pkstop-santa-monica-pier` @ 221ba132886a
+- `kody-w/pkstop-the-bean` @ 221ba132886a
+- `kody-w/rapp-alpha` @ 221ba132886a
+- `kody-w/rapp-beta` @ 221ba132886a
+- `kody-w/rapp-canary` @ 221ba132886a
+- `kody-w/rapp-installer` @ 221ba132886a
+- `kody-w/rapp-installer-canary` @ 221ba132886a
+- `kody-w/rapp-installer-dev` @ 221ba132886a
+- `kody-w/rapp-nightly` @ 221ba132886a
+- `kody-w/rapp-plant-smoke-20260505-233637` @ 221ba132886a
+- `kody-w/rapp-shape-aibast` @ 221ba132886a
+- `kody-w/rapp-test-neighbor` @ 221ba132886a
+- `kody-w/rapp2mcs` @ 221ba132886a
+- `kody-w/rapp_orion` @ 221ba132886a
+- `kody-w/twin-private` @ 221ba132886a
+- `kody-w/ubiquitous-train` @ 221ba132886a
+
+## `specs/SPEC.md` — 7 carrier(s), 5 DIFFERENT shas — DRIFT
+- `kody-w/RAPP` @ f24b9f8c8ff1
+- `kody-w/billwhalen-agent-team` @ bdbb8cc5e684
+- `kody-w/rapp-batcave` @ 055e3a5ff6f7
+- `kody-w/rapp-commons` @ 5e1d545c9fdb
+- `kody-w/rapp-midden` @ 055e3a5ff6f7
+- `kody-w/rapp-shadow-batcave` @ 055e3a5ff6f7
+- `kody-w/rapp2mcs` @ c31ec0eb21b4
