@@ -1,0 +1,19 @@
+{
+  "spec": "rapp/1",
+  "kind": "brain.page",
+  "stream_id": "brain:@kody-w/rapp-specs",
+  "seq": 5,
+  "utc": "2026-08-25T22:25:48.456Z",
+  "payload": {
+    "slug": "specs/skill-jacket-0",
+    "title": "skill-jacket/0 — verifiable, summonable skills (canonical home: this brain)",
+    "sha256": "930e2f6d48d784e445fa8e8cd325d6b7222caf575f0ef1388b9362d80b0928f7",
+    "tick": 108,
+    "tick_frame": "25035caec1a97613e169e37ba5a38286c5965b7f8342cb5a6a62fbe716d5ae21"
+  },
+  "payload_hash": "89137d9447d7e7550268a6c2038ae8fb1ac3d9f3e9849d3b02c511d083728e45",
+  "prev": "7cf59aa1849c7deaa0eeb02d61dc1b19327870ef49d0b29f4147e3ae1c4811bd",
+  "prev_wave": null,
+  "sig": null,
+  "frame_hash": "d6bfc7bc6c0e98be39fabbae2f2754fb088d501b8990e1458a3887a0fbfa99c7"
+}

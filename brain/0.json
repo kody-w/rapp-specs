@@ -1,0 +1,19 @@
+{
+  "spec": "rapp/1",
+  "kind": "brain.page",
+  "stream_id": "brain:@kody-w/rapp-specs",
+  "seq": 0,
+  "utc": "2026-08-25T22:25:48.374Z",
+  "payload": {
+    "slug": "specs/cast-0",
+    "title": "cast/0 — films as verifiable casts",
+    "sha256": "2b7ff90f82169e935aa208e8cdef6b080cb54b0cb3c2a41c620de526a5170f39",
+    "tick": 108,
+    "tick_frame": "25035caec1a97613e169e37ba5a38286c5965b7f8342cb5a6a62fbe716d5ae21"
+  },
+  "payload_hash": "1aae495bafd12e7f07231faf7956ac926e40aeb937f65c0a81fd325910853c98",
+  "prev": null,
+  "prev_wave": null,
+  "sig": null,
+  "frame_hash": "3984103af82c87ee9e22480c05987da680b08d95e007585b09a7df7fdbc3dd40"
+}

@@ -1,0 +1,19 @@
+{
+  "spec": "rapp/1",
+  "kind": "brain.page",
+  "stream_id": "brain:@kody-w/rapp-specs",
+  "seq": 2,
+  "utc": "2026-08-25T22:25:48.421Z",
+  "payload": {
+    "slug": "specs/dogg-skill",
+    "title": "dogg — use the global tick network",
+    "sha256": "c1d8cb600f11d6e85117a2034cd88a58fa3f122e26c6ae21cf7d835a91a5e1e0",
+    "tick": 108,
+    "tick_frame": "25035caec1a97613e169e37ba5a38286c5965b7f8342cb5a6a62fbe716d5ae21"
+  },
+  "payload_hash": "4bb9d42b8914d8f361bb411db62be4cc18cd1c9f8ff07a1006af856827aa1484",
+  "prev": "da9f6c21e754c927a7a06eb8f390bd337d576cc9981a81aa19db83e9b66c226f",
+  "prev_wave": null,
+  "sig": null,
+  "frame_hash": "61e9311aeeac87dda3fbdf1f5b9da5f4f8524dd2cab8a9005f54ca9a863642c2"
+}

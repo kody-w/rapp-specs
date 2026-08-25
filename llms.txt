@@ -1,0 +1,3 @@
+# rapp-specs
+
+> The global specs brain: every ecosystem protocol (rapp/1, dogg/0, rapp-brain/0, cast/0, skill-jacket/0) mirrored, content-addressed as brain.page frames, tick-anchored, daily-synced. One clone = the whole canon, verifiable offline. Chain: brain/ · Texts: specs/

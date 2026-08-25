@@ -1,0 +1,19 @@
+{
+  "spec": "rapp/1",
+  "kind": "brain.page",
+  "stream_id": "brain:@kody-w/rapp-specs",
+  "seq": 3,
+  "utc": "2026-08-25T22:25:48.437Z",
+  "payload": {
+    "slug": "specs/rapp-1",
+    "title": "The RAPP Protocol Suite",
+    "sha256": "cea7847f98f9751734995f46fd4e1bde211c8eb9d03dbbb477934213865bb91a",
+    "tick": 108,
+    "tick_frame": "25035caec1a97613e169e37ba5a38286c5965b7f8342cb5a6a62fbe716d5ae21"
+  },
+  "payload_hash": "cd72f1a48c02b458daacd4700edd068e97bec68f9e1f5182afc3b963c52bc48e",
+  "prev": "4bb9d42b8914d8f361bb411db62be4cc18cd1c9f8ff07a1006af856827aa1484",
+  "prev_wave": null,
+  "sig": null,
+  "frame_hash": "060463677dfbe8e2050058d31bd677cdc6278a0acf43d24788fd911b55a78e78"
+}

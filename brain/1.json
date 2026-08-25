@@ -1,0 +1,19 @@
+{
+  "spec": "rapp/1",
+  "kind": "brain.page",
+  "stream_id": "brain:@kody-w/rapp-specs",
+  "seq": 1,
+  "utc": "2026-08-25T22:25:48.396Z",
+  "payload": {
+    "slug": "specs/dogg-0",
+    "title": "The DOGG protocol — `dogg/0` (draft)",
+    "sha256": "632c209b7fd3b1c4a2b18487fba4e31101cf462ecf152782a3661dae155b827f",
+    "tick": 108,
+    "tick_frame": "25035caec1a97613e169e37ba5a38286c5965b7f8342cb5a6a62fbe716d5ae21"
+  },
+  "payload_hash": "da9f6c21e754c927a7a06eb8f390bd337d576cc9981a81aa19db83e9b66c226f",
+  "prev": "1aae495bafd12e7f07231faf7956ac926e40aeb937f65c0a81fd325910853c98",
+  "prev_wave": null,
+  "sig": null,
+  "frame_hash": "d5f4caa40d840c1cb6794c59a4ce65dff6a990268265269007873c190a08f3dc"
+}

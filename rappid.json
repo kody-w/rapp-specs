@@ -1,0 +1,14 @@
+{
+  "schema": "rapp/1",
+  "rappid": "rappid:@kody-w/rapp-specs:5c1265bc1259ab7e33c767d6c6494bd3c59211f717014b5ee08fc40be4239448",
+  "kind": "brain",
+  "name": "rapp-specs",
+  "host": "github.com",
+  "owner": "kody-w",
+  "repo": "rapp-specs",
+  "github": "https://github.com/kody-w/rapp-specs",
+  "brain_protocol": "rapp-brain/0",
+  "chain": "brain/ (DOGG dir form)",
+  "minted_at": "2026-08-25T22:26:00Z",
+  "notes": "The global specs brain: every ecosystem protocol mirrored + framed, daily-synced. One pull = the whole canon. Minted once per RAPP spec \u00a76.2."
+}

@@ -1,0 +1,19 @@
+{
+  "spec": "rapp/1",
+  "kind": "brain.page",
+  "stream_id": "brain:@kody-w/rapp-specs",
+  "seq": 4,
+  "utc": "2026-08-25T22:25:48.449Z",
+  "payload": {
+    "slug": "specs/rapp-brain-0",
+    "title": "rapp-brain/0 — second brains as verifiable dimensions",
+    "sha256": "27e5f8b9fc87370157c998ebe1a9d2f43cdd0d4ac1ef0ae5d338fc2fd1a85784",
+    "tick": 108,
+    "tick_frame": "25035caec1a97613e169e37ba5a38286c5965b7f8342cb5a6a62fbe716d5ae21"
+  },
+  "payload_hash": "7cf59aa1849c7deaa0eeb02d61dc1b19327870ef49d0b29f4147e3ae1c4811bd",
+  "prev": "cd72f1a48c02b458daacd4700edd068e97bec68f9e1f5182afc3b963c52bc48e",
+  "prev_wave": null,
+  "sig": null,
+  "frame_hash": "b1da6aff1e8a84cdbeaf3ff9ac795feccc207e127a6143c553c4bdfacf4a9b52"
+}
