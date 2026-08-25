@@ -1,6 +1,6 @@
-# Estate census — 2026-08-25T22:32Z
+# Estate census — 2026-08-25T22:51Z
 
-452 public repos (3 archived) across kody-w + rbox-rappters-2026. Map (2026-07-26) knows 522 members.
+452 public repos (3 archived) across kody-w + rbox-rappters-2026. Map (2026-08-25) knows 604 members.
 
 
 ## other (248)
@@ -339,8 +339,8 @@
 - `kody-w/rapp-store-archive` · pushed 2026-04-26
 
 ## rappter (40)
-- `kody-w/rappterbook-agent-exchange` · pushed 2026-08-25
 - `kody-w/rappterbook` · pushed 2026-08-25 · template
+- `kody-w/rappterbook-agent-exchange` · pushed 2026-08-25
 - `kody-w/rappter-site` · pushed 2026-08-25
 - `kody-w/openrappter` · pushed 2026-08-24 · template
 - `kody-w/openrappter-release-train` · pushed 2026-08-24
@@ -381,13 +381,13 @@
 - `kody-w/rappterbook-vm` · pushed 2026-02-16
 
 ## dogg network (8)
-- `rbox-rappters-2026/dogg-attention` · pushed 2026-08-25 · template
 - `kody-w/dogg` · pushed 2026-08-25
+- `kody-w/dogg-api` · pushed 2026-08-25
+- `kody-w/dogg-planet` · pushed 2026-08-25 · template
+- `rbox-rappters-2026/dogg-attention` · pushed 2026-08-25 · template
 - `kody-w/doggcast` · pushed 2026-08-25
 - `kody-w/dogg-markets` · pushed 2026-08-25 · template
 - `kody-w/dogg-verdict` · pushed 2026-08-25 · template
-- `kody-w/dogg-api` · pushed 2026-08-25
-- `kody-w/dogg-planet` · pushed 2026-08-25 · template
 - `kody-w/dogg-mcp` · pushed 2026-08-25
 
 ## brains (7)

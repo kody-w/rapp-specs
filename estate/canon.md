@@ -1,18 +1,18 @@
-# Canonical files across the estate — 2026-08-25T22:32Z
+# Canonical files across the estate — 2026-08-25T22:51Z
 
-5 canonical file(s) carried by 110 repo(s) (source: rapp-map estate-map.json, built 2026-07-26).
+5 canonical file(s) carried by 117 repo(s) (source: rapp-map estate-map.json, built 2026-08-25).
 
 
-## `CONSTITUTION.md` — 24 carrier(s), 22 DIFFERENT shas — DRIFT
+## `CONSTITUTION.md` — 26 carrier(s), 23 DIFFERENT shas — DRIFT
 - `kody-w/BillWhalenCopilotstudio` @ f5c6ec82e391
 - `kody-w/CommunityRAPP` @ d2e1e662ba3e
 - `kody-w/CommunityRAPP-archive` @ 4de9aa63c0b8
-- `kody-w/RAPP` @ aeb70e1e1030
+- `kody-w/RAPP` @ 596f5fed4dd0
 - `kody-w/RAPP-Agent-Repo` @ 89b6d03157ef
 - `kody-w/RAPP-Private-Workspace` @ 61d2a7a1d4ce
 - `kody-w/RAPP_Store` @ 43fff75c1062
 - `kody-w/RAPP_hippo` @ d2e1e662ba3e
-- `kody-w/RAR` @ 76c1a752ef09
+- `kody-w/RAR` @ 9a957cdd88a3
 - `kody-w/aibast-agents-library` @ 0289fbd55824
 - `kody-w/first-principles-to-mars` @ a2fadf99b5af
 - `kody-w/mars-barn-opus` @ e49114d603de
@@ -20,6 +20,8 @@
 - `kody-w/microsoft-365-team` @ 8dd890384af0
 - `kody-w/neighborhood-example` @ 14b8b043578d
 - `kody-w/openrapp-desktop` @ 1058ef0a96a2
+- `kody-w/rapp-ai` @ 4de9aa63c0b8
+- `kody-w/rapp-constitution` @ 8c0b0aba76b8
 - `kody-w/rapp-installer-dev` @ 7bc2c74da0fd
 - `kody-w/rapp-shape-aibast` @ 0289fbd55824
 - `kody-w/rapp2mcs` @ c52888c4a87d
@@ -29,12 +31,13 @@
 - `kody-w/rappterverse` @ aa15cc06b0b7
 - `kody-w/zion` @ dbca073f4519
 
-## `RAPP1_AUTHORITY.json` — 3 carrier(s), 3 DIFFERENT shas — DRIFT
-- `kody-w/RAPP` @ cdd99cba9d69
+## `RAPP1_AUTHORITY.json` — 4 carrier(s), 3 DIFFERENT shas — DRIFT
+- `kody-w/RAPP` @ 535f021454f8
+- `kody-w/RAPP-Bible` @ b500fc7b13ee
 - `kody-w/rapp-estate` @ c73d054052cf
-- `kody-w/rapp-map` @ 6ba4b606a8ba
+- `kody-w/rapp-map` @ b500fc7b13ee
 
-## `agents/basic_agent.py` — 64 carrier(s), 12 DIFFERENT shas — DRIFT
+## `agents/basic_agent.py` — 65 carrier(s), 12 DIFFERENT shas — DRIFT
 - `kody-w/AI-Agent-Templates` @ fef5d4c58ab4
 - `kody-w/AI-Agent-Templates-Pilot` @ fef5d4c58ab4
 - `kody-w/AIGame` @ 53b56116b199
@@ -91,6 +94,7 @@
 - `kody-w/public-art-collective` @ 6cd51b6693e0
 - `kody-w/rapp-agents` @ 221ba132886a
 - `kody-w/rapp-agents-private` @ 221ba132886a
+- `kody-w/rapp-ai` @ 53b56116b199
 - `kody-w/rapp-brainstem-walkthrough` @ 221ba132886a
 - `kody-w/rapp-store-archive` @ a34d8d58e40c
 - `kody-w/rappterbox` @ b95b14d1d442
@@ -100,13 +104,14 @@
 - `kody-w/vbrainstem` @ 221ba132886a
 - `kody-w/wildhaven-ai-homes-twin` @ e55e5054a33e
 
-## `rapp_brainstem/agents/basic_agent.py` — 25 carrier(s), 2 DIFFERENT shas — DRIFT
+## `rapp_brainstem/agents/basic_agent.py` — 26 carrier(s), 2 DIFFERENT shas — DRIFT
 - `kody-w/RAPP` @ 221ba132886a
 - `kody-w/RAPP-Private-Workspace` @ b95b14d1d442
 - `kody-w/aibast-agents-library` @ 221ba132886a
 - `kody-w/fantastic-computing-machine` @ 221ba132886a
 - `kody-w/heimdall` @ 221ba132886a
 - `kody-w/kody-twin` @ 221ba132886a
+- `kody-w/openrappter` @ 221ba132886a
 - `kody-w/pkstop-central-park-bandshell` @ 221ba132886a
 - `kody-w/pkstop-national-mall` @ 221ba132886a
 - `kody-w/pkstop-pike-place-market` @ 221ba132886a
@@ -127,11 +132,14 @@
 - `kody-w/twin-private` @ 221ba132886a
 - `kody-w/ubiquitous-train` @ 221ba132886a
 
-## `specs/SPEC.md` — 7 carrier(s), 5 DIFFERENT shas — DRIFT
+## `specs/SPEC.md` — 10 carrier(s), 7 DIFFERENT shas — DRIFT
 - `kody-w/RAPP` @ f24b9f8c8ff1
 - `kody-w/billwhalen-agent-team` @ bdbb8cc5e684
+- `kody-w/rapp-apex-dino` @ 164f474ffa35
 - `kody-w/rapp-batcave` @ 055e3a5ff6f7
 - `kody-w/rapp-commons` @ 5e1d545c9fdb
+- `kody-w/rapp-dino` @ 164f474ffa35
 - `kody-w/rapp-midden` @ 055e3a5ff6f7
+- `kody-w/rapp-open` @ eaa3fa463125
 - `kody-w/rapp-shadow-batcave` @ 055e3a5ff6f7
 - `kody-w/rapp2mcs` @ c31ec0eb21b4
