@@ -65,28 +65,53 @@ try:
     except ValueError as e:
         check("C4 activation without verdict refused (V5 fail closed)", True, str(e)[:60])
 
-    # C5 · a host cannot issue its own verdict (V1) — structural, not policy
-    host_stream = molt._stream_of(a)
+    # C5 · a host cannot issue its own verdict (V1). Trust must exist first, or this
+    # trips the no-anchor guard and certifies nothing (the same vacuity as C5b's first cut).
+    sa, sva = tmp / "sa.jsonl", tmp / "sva.jsonl"
+    molt.genesis(sa, "planner", FERTILE)
+    sr = molt.ring(sa, ADAPTED, "legit")
+    sv = molt.judge(sva, sa, 1, ADAPTED)
+    molt.trust(sa, sv["payload"]["gate"], "the real gate")
+    host_stream = molt._stream_of(sa)
     forged = tmp / "forged.jsonl"
+    # forged in the HOST's own stream, but claiming the TRUSTED gate's rappid
     molt._append(forged, "molt.verdict", host_stream,
-                 {"ring": r1["frame_hash"], "verdict": "pass", "checks": {}, "gate": "self"})
+                 {"ring": sr["frame_hash"], "verdict": "pass", "checks": {},
+                  "gate": sv["payload"]["gate"]})
     try:
-        molt.activate(a, forged, 1); check("C5 self-issued verdict refused", False)
+        molt.activate(sa, forged, 1); check("C5 self-issued verdict refused", False)
     except ValueError as e:
-        check("C5 self-issued verdict refused (V1 structural)", True, str(e)[:60])
+        right = "own stream" in str(e) and "no trusted gate recorded" not in str(e)
+        check("C5 self-issued verdict refused even when it names a TRUSTED gate (V1)",
+              right, str(e)[:60])
 
-    # C5b · THE REAL V1 TEST: forge from an ARBITRARY stream that is not the host's.
-    # The original C5 only forged using the host's OWN stream_id — the single case the
-    # code already rejected — so it certified a claim far weaker than the spec's text.
-    # Found by adversarial audit 2026-08-26; the attack below DID activate before the fix.
+    # C5b · THE REAL V1 TEST: a locus that HAS a trusted gate must still refuse a verdict
+    # forged under some other stream by an untrusted gate.
+    #
+    # The first version of this test was VACUOUS — it ran before any trust frame existed, so
+    # it tripped the earlier "no trusted gate recorded" guard and never reached the check it
+    # claimed to certify. That is the same defect as the original C5 it was written to
+    # replace: a test that passes for a reason other than the one it names. Caught by a
+    # second adversarial audit, 2026-08-26. Trust must be established FIRST for this to mean
+    # anything.
+    fa, fva = tmp / "fa.jsonl", tmp / "fva.jsonl"
+    molt.genesis(fa, "planner", FERTILE)
+    fr = molt.ring(fa, ADAPTED, "legit adaptation")
+    fv = molt.judge(fva, fa, 1, ADAPTED)
+    molt.trust(fa, fv["payload"]["gate"], "the real gate")      # a REAL anchor exists now
+    check("C5b-pre a trusted gate is recorded", len(molt.trusted_gates(fa)) == 1)
     forged2 = tmp / "forged2.jsonl"
     molt._append(forged2, "molt.verdict", "verdict:@attacker/anything",
-                 {"ring": r1["frame_hash"], "verdict": "pass", "checks": {},
+                 {"ring": fr["frame_hash"], "verdict": "pass", "checks": {},
                   "gate": "rappid:@attacker/self:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"})
     try:
-        molt.activate(a, forged2, 1); check("C5b forged verdict from an arbitrary stream refused", False)
+        molt.activate(fa, forged2, 1)
+        check("C5b forged verdict from an UNTRUSTED gate refused, with trust present", False)
     except ValueError as e:
-        check("C5b forged verdict from an arbitrary stream refused (V1)", True, str(e)[:52])
+        # and it must refuse for the RIGHT reason, not the no-anchor one
+        right = "trusted" in str(e).lower() and "no trusted gate recorded" not in str(e)
+        check("C5b forged verdict from an UNTRUSTED gate refused (V1), for the right reason",
+              right, str(e)[:60])
 
     # C5c · activation with NO trusted gate recorded must fail closed
     nt = tmp / "nt.jsonl"; molt.genesis(nt, "planner", FERTILE)

@@ -136,11 +136,17 @@ def _check_contract(tree, contract: str) -> tuple[bool, str]:
     classes = [n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
     if spec.get("class") and not classes:
         return False, f"contract: {contract} requires a class; none found"
-    for want in spec.get("methods", ()):
-        if not any(isinstance(b, ast.FunctionDef) and b.name == want
-                   for c in classes for b in c.body):
-            return False, f"contract: {contract} requires {want}(); missing"
-    return True, f"contract: satisfies {contract}"
+    # ONE class must satisfy the WHOLE contract. Checking each method against "any class in
+    # the file" passes a file where class A has __init__ and unrelated class B has perform()
+    # — no loadable agent exists, yet the gate said pass. Found by re-audit 2026-08-26.
+    wants = spec.get("methods", ())
+    for c in classes:
+        have = {b.name for b in c.body if isinstance(b, ast.FunctionDef)}
+        if all(w in have for w in wants):
+            return True, f"contract: {c.name} satisfies {contract}"
+    missing = [w for w in wants]
+    return False, (f"contract: no single class satisfies {contract} "
+                   f"(needs {', '.join(missing)} on one class)")
 
 
 def _check_fertility(source: bytes) -> tuple[bool, str]:
