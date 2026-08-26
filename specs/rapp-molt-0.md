@@ -281,3 +281,10 @@ evidence on its own: an earlier revision of this profile reported 29/29 while
 `_check_fertility` could be deleted outright with no test failing, because the sterile
 fixture also tripped a different check. **A guard whose removal changes no test result is
 not tested**, and only a mutation pass can tell you which ones those are.
+
+A mutation harness has its own failure mode, and this one hit it: a mutant that is not
+valid Python makes the suite fail on the *import*, and a failing suite is scored "caught" —
+so a guard nobody tests gets certified as covered. One of the first ten mutations here did
+exactly that. `mutation_check.py` therefore loads each mutant before trusting its verdict,
+and reports an unloadable mutant as INVALID rather than as evidence. **A mutant must be a
+valid program that behaves worse, not a broken one.**

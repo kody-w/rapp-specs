@@ -44,9 +44,12 @@ MUTATIONS = [
     ("genesis re-mint refusal", "molt.py",
      r'        raise ValueError\("genesis already minted — a floor is never re-minted \(§5\.1\)"\)',
      '        pass  # MUTATED: allow re-mint'),
-    ("trust anchor requirement (V1)", "molt.py",
-     r'        raise ValueError\("no trusted gate recorded on this locus — activation refused \(V5\). "',
-     '        trusted = {"MUTATED-any"} or ValueError("'),
+    ("V1 trust anchor required at all", "molt.py",
+     r"    if not trusted:\n",
+     "    if False:  # MUTATED: no anchor required\n"),
+    ("V1 verdict must come from a TRUSTED gate", "molt.py",
+     r'        if v\["payload"\]\.get\("gate"\) not in trusted:',
+     "        if False:  # MUTATED: accept any gate"),
     ("host-own-stream verdict refusal (V1)", "molt.py",
      r'            raise ValueError\("verdict is in the host\'s own stream — refused \(§5\.3 V1\)"\)',
      '            pass  # MUTATED: accept self-issued'),
@@ -57,6 +60,21 @@ MUTATIONS = [
      r'        raise ValueError\("locus is pinned — activation refused \(§5\.6\)"\)',
      '        pass  # MUTATED: ignore pin'),
 ]
+
+
+def imports_ok(d: Path) -> tuple[bool, str]:
+    """Does the mutated module still load?
+
+    Without this the harness lies in the most dangerous direction. A mutation that produces
+    invalid Python makes conformance_molt.py fail — and a failing suite is scored "caught",
+    so a guard nobody tests gets certified as covered. Found by self-check 2026-08-26: the
+    original V1 trust-anchor mutation left an unterminated string literal, and its "caught"
+    result meant nothing. A mutant must be a VALID program that behaves worse."""
+    r = subprocess.run([sys.executable, "-c", "import sys; sys.path.insert(0, '.'); "
+                        "sys.path.insert(0, '..'); import molt"],
+                       cwd=d, capture_output=True, text=True, timeout=180)
+    tail = (r.stderr or "").strip().splitlines()[-1:] or [""]
+    return r.returncode == 0, tail[0]
 
 
 def run_suite(d: Path) -> tuple[bool, str]:
@@ -79,7 +97,7 @@ def main() -> int:
             return 1
 
         pristine = {f: (work / f).read_text() for f in {m[1] for m in MUTATIONS}}
-        caught, missed, skipped = [], [], []
+        caught, missed, skipped, broken = [], [], [], []
         for name, fname, pat, repl in MUTATIONS:
             (work / fname).write_text(pristine[fname])          # restore
             src = pristine[fname]
@@ -88,13 +106,18 @@ def main() -> int:
                 skipped.append(name)
                 continue
             (work / fname).write_text(new)
+            loads, why = imports_ok(work)
+            if not loads:
+                broken.append((name, why))
+                print(f"  ⚠️  INVALID   {name}  — mutant does not import: {why[:52]}")
+                continue
             still_green, tail = run_suite(work)
             (caught, missed)[still_green].append((name, tail))
             print(f"  {'❌ UNCAUGHT' if still_green else '✅ caught  '}  {name}")
         for f, txt in pristine.items():
             (work / f).write_text(txt)
 
-        print(f"\ncaught {len(caught)}/{len(caught) + len(missed)} mutations"
+        print(f"\ncaught {len(caught)}/{len(caught) + len(missed)} valid mutations"
               + (f"   ({len(skipped)} pattern(s) did not match — treated as FAILURE)" if skipped else ""))
         if missed:
             print("\nUNTESTED GUARDS — removing these changes no test result:")
@@ -104,7 +127,12 @@ def main() -> int:
             print("\nPATTERN DRIFT — these mutations no longer apply; the guard may have moved:")
             for name in skipped:
                 print(f"  • {name}")
-        return 0 if (not missed and not skipped) else 1
+        if broken:
+            print("\nINVALID MUTANTS — these prove NOTHING; the suite would fail on the import,"
+                  "\nnot on the missing guard. Rewrite them to be valid programs:")
+            for name, why in broken:
+                print(f"  • {name}: {why[:70]}")
+        return 0 if not (missed or skipped or broken) else 1
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
 
