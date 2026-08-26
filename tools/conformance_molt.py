@@ -19,6 +19,14 @@ import molt, rapp as R
 FERTILE = b"class Agent:\n    def __init__(self, name=None, metadata=None):\n        self.name = name\n"
 ADAPTED = b"class Agent:\n    def __init__(self, name=None, metadata=None):\n        self.name = name\n        self.v = 2\n"
 STERILE = b"AGENT = {'name': 'x'}\n"          # loads fine, can never parent a generation
+# Satisfies the rapp/agent contract (a class with __init__) but is STERILE: its constructor
+# demands positional args a descendant cannot supply. This isolates V3 from V2 — with the
+# old fixture both guards failed together, so deleting fertility changed no result.
+CONTRACT_OK_STERILE = b"class Agent:\n    def __init__(self, name, metadata):\n        self.name = name\n"
+# Two classes, each holding half the contract: no single loadable agent exists.
+SPLIT_CONTRACT = b"class A:\n    def __init__(self, n=None):\n        pass\n\nclass B:\n    def perform(self):\n        pass\n"
+# Duplicate class name across the composed set — visible only at set scope (V4).
+PEER_DUP = b"class Agent:\n    def __init__(self, name=None):\n        pass\n"
 BROKEN  = b"class Agent:\n  def __init__(\n"  # unparseable
 
 P, F, results = 0, 0, []
@@ -50,8 +58,12 @@ try:
     # C2 · the floor is never re-minted
     try:
         molt.genesis(a, "planner", FERTILE); check("C2 genesis re-mint refused", False)
-    except ValueError:
-        check("C2 genesis re-mint refused (§5.1)", True)
+    except ValueError as e:
+        # Assert the REASON. A bare `except ValueError` passes even with the re-mint guard
+        # deleted, because some unrelated error raises the same type — mutation-tested and
+        # confirmed vacuous, round 3.
+        check("C2 genesis re-mint refused for the right reason (§5.1)",
+              "already minted" in str(e), str(e)[:52])
 
     # C3 · recording grants nothing
     r1 = molt.ring(a, ADAPTED, "add version marker")
@@ -63,7 +75,8 @@ try:
     try:
         molt.activate(a, va, 1); check("C4 activation without verdict refused", False)
     except ValueError as e:
-        check("C4 activation without verdict refused (V5 fail closed)", True, str(e)[:60])
+        check("C4 activation without verdict refused, for the right reason (V5)",
+              "verdict chain" in str(e) or "trusted gate" in str(e), str(e)[:56])
 
     # C5 · a host cannot issue its own verdict (V1). Trust must exist first, or this
     # trips the no-anchor guard and certifies nothing (the same vacuity as C5b's first cut).
@@ -118,8 +131,9 @@ try:
     ntr = molt.ring(nt, ADAPTED, "x"); ntv = tmp / "ntv.jsonl"; molt.judge(ntv, nt, 1, ADAPTED)
     try:
         molt.activate(nt, ntv, 1); check("C5c no trusted gate = refused", False)
-    except ValueError:
-        check("C5c no trusted gate recorded = activation refused (V5)", True)
+    except ValueError as e:
+        check("C5c no trusted gate recorded = refused, for the right reason (V5)",
+              "no trusted gate recorded" in str(e), str(e)[:52])
 
     # C6 · a real gate passes a fertile ring, and activation then succeeds
     v = molt.judge(va, a, 1, ADAPTED)
@@ -133,16 +147,21 @@ try:
 
     # C7 · fertility (V3): a ring that LOADS but can never parent again is refused
     d = tmp / "d.jsonl"; molt.genesis(d, "planner", FERTILE)
-    rs = molt.ring(d, STERILE, "flatten to a dict")
+    rs = molt.ring(d, CONTRACT_OK_STERILE, "constructor a descendant cannot call")
     vd = tmp / "vd.jsonl"
-    vs = molt.judge(vd, d, 1, STERILE)
+    vs = molt.judge(vd, d, 1, CONTRACT_OK_STERILE)
     molt.trust(d, vs["payload"]["gate"], "conformance gate")
-    check("C7a gate FAILS a sterile ring (V3)", vs["payload"]["verdict"] == "fail",
-          vs["payload"]["checks"].get("fertility"))
+    # V3 must fail ALONE here. If the fixture also broke V2, deleting fertility entirely
+    # would leave the suite green — which is exactly what round-3 mutation testing found.
+    check("C7a gate FAILS a sterile ring on FERTILITY specifically (V3)",
+          vs["payload"]["checks"].get("fertility") == "fail"
+          and vs["payload"]["checks"].get("contract") == "pass",
+          f"contract={vs['payload']['checks'].get('contract')} fertility={vs['payload']['checks'].get('fertility')}")
     try:
         molt.activate(d, vd, 1); check("C7b sterile ring cannot be activated", False)
-    except ValueError:
-        check("C7b sterile ring cannot be activated", True)
+    except ValueError as e:
+        check("C7b sterile ring cannot be activated, for the right reason",
+              "TRUSTED verifier" in str(e) or "passing verdict" in str(e), str(e)[:52])
 
     # C8 · judging different bytes than were recorded is caught
     v2 = molt.judge(vd, d, 1, FERTILE)
@@ -172,6 +191,37 @@ try:
     vcc = molt.judge(ccv, cc, 1, ADAPTED)
     check("C15 V2 fails a ring that misses its recorded contract",
           vcc["payload"]["checks"].get("contract") == "fail", vcc["payload"]["detail"][:56])
+
+    # ---- guards that had NO test at all until round-3 mutation testing found them ----
+
+    # C16 · V4 whole-set: a duplicate class name across the composed set. Visible only at
+    # set scope, so no single-ring check can catch it.
+    ws = tmp / "ws.jsonl"; molt.genesis(ws, "x", FERTILE)
+    molt.ring(ws, ADAPTED, "adapt")
+    wsv = tmp / "wsv.jsonl"
+    v_ws = molt.judge(wsv, ws, 1, ADAPTED, peers=[PEER_DUP])
+    check("C16 V4 fails on a duplicate class name across the composed set",
+          v_ws["payload"]["checks"].get("whole_set") == "fail",
+          v_ws["payload"]["detail"][:52])
+    v_ok = molt.judge(wsv, ws, 1, ADAPTED, peers=[b"class Other:\n    def __init__(self, x=None):\n        pass\n"])
+    check("C16b V4 passes when the composed set has no collision",
+          v_ok["payload"]["checks"].get("whole_set") == "pass")
+
+    # C17 · V2 requires ONE class to satisfy the WHOLE contract, not any-class-any-method.
+    sp = tmp / "sp.jsonl"; molt.genesis(sp, "x", FERTILE, contract="rapp/brainstem-agent")
+    molt.ring(sp, SPLIT_CONTRACT, "contract split across two classes")
+    spv = tmp / "spv.jsonl"
+    v_sp = molt.judge(spv, sp, 1, SPLIT_CONTRACT)
+    check("C17 V2 fails when no SINGLE class satisfies the contract",
+          v_sp["payload"]["checks"].get("contract") == "fail", v_sp["payload"]["detail"][:56])
+
+    # C18 · V5 in the contract check: an unknown contract is unverifiable, never pass.
+    uk = tmp / "uk.jsonl"; molt.genesis(uk, "x", FERTILE, contract="something/nobody-knows")
+    molt.ring(uk, ADAPTED, "fine code, unknown contract")
+    ukv = tmp / "ukv.jsonl"
+    v_uk = molt.judge(ukv, uk, 1, ADAPTED)
+    check("C18 an UNKNOWN contract is unverifiable, never pass (V5)",
+          v_uk["payload"]["checks"].get("contract") == "fail", v_uk["payload"]["detail"][:52])
 
     # C10 · a molt chain is a FRAME chain — verified with no molt code in the loop
     plain_ok, seen = True, 0

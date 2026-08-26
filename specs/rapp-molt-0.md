@@ -273,4 +273,11 @@ A **Gate** implements §5.3 including V2, V3, V4, and MUST NOT be co-resident wi
 authority of the candidate it judges.
 
 An implementation claiming rapp-molt/0 MUST pass
-[`tools/conformance_molt.py`](../tools/conformance_molt.py) (28/28 at time of writing).
+[`tools/conformance_molt.py`](../tools/conformance_molt.py) (33/33 at time of writing).
+
+It SHOULD also pass [`tools/mutation_check.py`](../tools/mutation_check.py), which breaks
+each guard in a scratch copy and requires the suite to notice. A green suite is not
+evidence on its own: an earlier revision of this profile reported 29/29 while
+`_check_fertility` could be deleted outright with no test failing, because the sterile
+fixture also tripped a different check. **A guard whose removal changes no test result is
+not tested**, and only a mutation pass can tell you which ones those are.

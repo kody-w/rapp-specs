@@ -150,10 +150,23 @@ def _check_contract(tree, contract: str) -> tuple[bool, str]:
 
 
 def _check_fertility(source: bytes) -> tuple[bool, str]:
-    """V3 — is this ring a valid PARENT for a further generation, not merely loadable?
-    A dead end passes every load test and still ends the lineage. Minimum bar: it parses,
-    and it still exposes the adaptation surface the contract names (a class with the
-    entry point), so the next generation has something to derive from."""
+    """V3 — can a FURTHER generation actually be derived from this ring?
+
+    This must test something V2 does not, or it is decoration. The first implementation
+    asked "is there a class with __init__" — which is exactly what the `rapp/agent`
+    contract already requires, so V3 was V2 wearing a different name and no test could
+    tell them apart (adversarial audit round 3, 2026-08-26: deleting this whole function
+    left the suite at 29/29).
+
+    The real question is whether the next generation can construct this one WITHOUT
+    knowing its signature. A constructor demanding positional arguments an automated
+    descendant cannot supply is a dead end: it loads, it satisfies the contract, and the
+    lineage stops there. The estate already paid for this distinction — basic_agent.py's
+    pre-hardening ancestor took `__init__(self, name, metadata)` with no defaults, and the
+    grail version added defaults precisely so subclasses could preset them.
+
+    So: fertile means every non-self parameter of `__init__` has a default (or is absorbed
+    by *args/**kwargs), and the class is not sealed against subclassing."""
     try:
         tree = ast.parse(source)
     except SyntaxError as e:
@@ -162,9 +175,31 @@ def _check_fertility(source: bytes) -> tuple[bool, str]:
     if not classes:
         return False, "sterile: no class to derive a further generation from"
     for c in classes:
-        if any(isinstance(n, ast.FunctionDef) and n.name == "__init__" for n in c.body):
-            return True, f"fertile: {c.name} can parent a further generation"
-    return False, "sterile: no constructor — a subclass cannot initialize"
+        if any(_deco_name(d) in ("final", "sealed") for d in c.decorator_list):
+            continue                       # explicitly closed to descendants
+        init = next((n for n in c.body
+                     if isinstance(n, ast.FunctionDef) and n.name == "__init__"), None)
+        if init is None:
+            continue
+        a = init.args
+        required = [x for x in (a.posonlyargs + a.args)[1:]]   # drop self
+        n_defaults = len(a.defaults)
+        unfilled = len(required) - n_defaults
+        if a.vararg or a.kwarg:
+            unfilled = 0                   # *args/**kwargs absorb anything a child passes
+        kwonly_unfilled = sum(1 for d in a.kw_defaults if d is None)
+        if unfilled <= 0 and kwonly_unfilled == 0:
+            return True, f"fertile: {c.name} can be constructed by a descendant"
+    return False, ("sterile: no class a descendant can construct without knowing its "
+                   "signature (required args without defaults, or sealed)")
+
+
+def _deco_name(d) -> str:
+    if isinstance(d, ast.Name):
+        return d.id
+    if isinstance(d, ast.Attribute):
+        return d.attr
+    return ""
 
 
 def judge(vchain: Path, chain: Path, ring_seq: int, source: bytes,
