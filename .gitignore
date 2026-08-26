@@ -1,0 +1,4 @@
+
+# build litter — bytecode is regenerated, never reviewed, and churns every run
+__pycache__/
+*.pyc
