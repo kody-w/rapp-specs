@@ -118,6 +118,31 @@ def ring(path: Path, source: bytes, rationale: str = "") -> dict:
 
 
 # ---------- §5.3 the gate ----------
+# What each known contract requires of a ring. A contract this gate does not know is NOT
+# waved through — an unrecognised contract is an unverifiable one (V5).
+CONTRACTS = {
+    "rapp/agent":     {"class": True, "methods": ("__init__",)},
+    "rapp/brainstem-agent": {"class": True, "methods": ("__init__", "perform")},
+}
+
+
+def _check_contract(tree, contract: str) -> tuple[bool, str]:
+    """V2 — does the ring satisfy the contract genesis recorded?"""
+    if not contract:
+        return False, "contract: genesis recorded none — unverifiable (V5)"
+    spec = CONTRACTS.get(contract)
+    if spec is None:
+        return False, f"contract: {contract!r} unknown to this gate — unverifiable (V5)"
+    classes = [n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
+    if spec.get("class") and not classes:
+        return False, f"contract: {contract} requires a class; none found"
+    for want in spec.get("methods", ()):
+        if not any(isinstance(b, ast.FunctionDef) and b.name == want
+                   for c in classes for b in c.body):
+            return False, f"contract: {contract} requires {want}(); missing"
+    return True, f"contract: satisfies {contract}"
+
+
 def _check_fertility(source: bytes) -> tuple[bool, str]:
     """V3 — is this ring a valid PARENT for a further generation, not merely loadable?
     A dead end passes every load test and still ends the lineage. Minimum bar: it parses,
@@ -147,12 +172,21 @@ def judge(vchain: Path, chain: Path, ring_seq: int, source: bytes,
         raise ValueError(f"no ring at seq {ring_seq}")
     checks, detail = {}, []
 
-    # V2 structural
+    # V2 structural — against the contract genesis actually RECORDED, not just "it parses".
+    # The original implementation called ast.parse() and nothing else, while genesis's
+    # `contract` field was never read once — so the check claimed conformance to a contract
+    # it had never looked at. Found by adversarial audit 2026-08-26.
+    contract = (frames[0]["payload"].get("contract") or "") if frames else ""
     try:
-        ast.parse(source)
+        tree = ast.parse(source)
         checks["structural"] = "pass"
     except Exception as e:
+        tree = None
         checks["structural"] = "fail"; detail.append(f"structural: {e}"[:120])
+    if tree is not None:
+        ok_c, why_c = _check_contract(tree, contract)
+        checks["contract"] = "pass" if ok_c else "fail"
+        detail.append(why_c)
 
     # V2b the recorded content is the content being judged
     actual = hashlib.sha256(source).hexdigest()
@@ -184,11 +218,45 @@ def judge(vchain: Path, chain: Path, ring_seq: int, source: bytes,
         detail.append("whole-set: duplicate class name across the composed set")
 
     verdict = "pass" if all(v == "pass" for v in checks.values()) else "fail"
-    gate_rappid = R.mint_rappid(gate_owner, gate_name)
+    # The gate's identity is the trust anchor §5.4 points at, so it MUST be stable —
+    # re-minting per verdict (the original bug) both violates rapp/1 §6.2 mint-once and
+    # makes trust impossible to express, since the value a host trusted yesterday is gone.
+    gate_rappid = _gate_identity(vchain, gate_owner, gate_name)
     vstream = f"verdict:@{gate_owner}/{gate_name}"
     return _append(vchain, "molt.verdict", vstream, {
         "ring": target["frame_hash"], "verdict": verdict, "checks": checks,
         "gate": gate_rappid, "detail": " · ".join(detail)[:400]})
+
+
+def _gate_identity(vchain: Path, owner: str, name: str) -> str:
+    """Mint the gate's rappid once and keep it beside its chain (§6.2 mint-once)."""
+    side = Path(str(vchain) + ".rappid.json")
+    if side.exists():
+        try:
+            return json.loads(side.read_text())["rappid"]
+        except Exception:
+            pass
+    rid = R.mint_rappid(owner, name)
+    side.parent.mkdir(parents=True, exist_ok=True)
+    side.write_text(json.dumps({"rappid": rid, "kind": "molt.gate", "gate": name}, indent=2) + "\n")
+    return rid
+
+
+def trust(chain: Path, gate_rappid: str, note: str = "") -> dict:
+    """Record that this host accepts verdicts from a named gate.
+
+    Trust is DATA a host records deliberately, never something inferred from a verdict that
+    shows up. Without this, activate() had only one test — "is this stream not literally
+    mine?" — which an attacker passes by inventing any other stream name. Demonstrated
+    2026-08-26: forging `verdict:@attacker/anything` activated a malicious ring."""
+    if not R.rappid_valid(gate_rappid):
+        raise ValueError(f"not a valid rappid: {gate_rappid!r}")
+    return _append(chain, "molt.trust", _stream_of(chain),
+                   {"gate": gate_rappid, "note": note[:200]})
+
+
+def trusted_gates(chain: Path) -> set:
+    return {f["payload"]["gate"] for f in load(chain) if f["kind"] == "molt.trust"}
 
 
 # ---------- §5.4 activation ----------
@@ -208,6 +276,10 @@ def activate(chain: Path, vchain: Path, ring_seq: int) -> dict:
     if not vframes:
         raise ValueError("no verdict chain — V5 fail closed, activation refused")
     host_stream = _stream_of(chain)
+    trusted = trusted_gates(chain)
+    if not trusted:
+        raise ValueError("no trusted gate recorded on this locus — activation refused (V5). "
+                         "Record one deliberately with trust(chain, <gate rappid>).")
     match = None
     for v in vframes:
         if v["kind"] != "molt.verdict":
@@ -216,10 +288,12 @@ def activate(chain: Path, vchain: Path, ring_seq: int) -> dict:
             continue
         if v["stream_id"] == host_stream:                       # V1, belt and braces
             raise ValueError("verdict is in the host's own stream — refused (§5.3 V1)")
+        if v["payload"].get("gate") not in trusted:
+            continue                       # a verdict from an unvouched gate is not evidence
         if v["payload"].get("verdict") == "pass":
             match = v
     if match is None:
-        raise ValueError("no passing verdict from a verifier for this ring — refused (V5)")
+        raise ValueError("no passing verdict from a TRUSTED verifier for this ring — refused (V5)")
     return _append(chain, "molt.activated", host_stream, {
         "ring": target["frame_hash"], "verdict": match["frame_hash"],
         "gate": match["payload"].get("gate")})

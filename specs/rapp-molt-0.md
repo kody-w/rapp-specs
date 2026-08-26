@@ -1,8 +1,9 @@
 # rapp-molt/0 — a rapp/1 profile for self-modifying agents
 
 **Status:** draft-0 · **Depends on:** [rapp/1](https://github.com/kody-w/rapp-1)
-**Supersedes:** `gitprotocol-molt(5)` (kody-w/git-molt), whose guarantees this carries
-forward on rapp/1 frames instead of Git objects. See [LINEAGE.md](LINEAGE.md) for why.
+**Supersedes:** `gitprotocol-molt(5)` (kody-w/git-molt, archived), whose guarantees this
+carries forward on rapp/1 frames instead of Git objects. The reasoning — and the
+identity-law conflict that forced the split — is recorded in that repo's README.
 
 The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY are to be interpreted as in
 RFC 2119.
@@ -136,14 +137,34 @@ Recording a ring is **always permitted**. It grants nothing.
 ```
 
 **V1 · The verdict belongs to the verifier.** A candidate MUST NOT be able to determine
-its own verdict. Under this spec that is *structural rather than procedural*: a verdict
-lives in the verifier's stream, chained under the verifier's identity, so a host cannot
-mint one at all — an appended frame carrying a foreign `stream_id` fails rapp/1
-verification. The predecessor achieved this by asking every host to install a
-`pre-receive` hook; here, forging a verdict is not a policy violation but an invalid
-frame.
+its own verdict. Concretely, a host MUST NOT activate a ring unless it holds a `pass`
+verdict that is (a) in a stream other than its own, AND (b) issued by a gate whose rappid
+this locus has **explicitly recorded as trusted** (`molt.trust`, §5.7). A locus with no
+recorded trust anchor MUST refuse every activation (V5).
 
-**V2 · Structural validity.** The ring MUST satisfy the runtime's agent contract.
+**Both conditions are required, and an earlier draft of this spec was wrong about why.**
+It claimed the guarantee was "structural rather than procedural" — that forging a verdict
+was impossible because a foreign `stream_id` fails verification. That is false, and was
+demonstrated 2026-08-26: a host simply mints its verdict under an *invented* stream name
+like `verdict:@attacker/anything`, which is not its own stream and verifies perfectly.
+Test (b) is what actually closes it.
+
+**Honest limit.** Trust anchoring stops an unvouched gate, not a dishonest one. A host that
+controls both its own chain and the trusted gate's chain can still author a passing verdict,
+because nothing in an unsigned frame binds it to a key the host does not hold. The strong
+property — a verdict a host *cannot* produce — requires the gate to SIGN its verdict frames
+(rapp/1 `sig`) with a key the host does not possess, and the host to verify that signature
+before activating. Implementations that need the strong property MUST sign; this profile
+does not yet mandate it, and MUST NOT be described as if it did.
+
+**V2 · Structural validity.** The ring MUST satisfy the agent contract that **genesis
+recorded** (§5.1 `contract`). A gate MUST read that field and check against it; merely
+confirming the source parses is NOT V2. A contract the gate does not recognise is
+unverifiable and MUST resolve to fail (V5), never to pass.
+
+A passing verdict asserts contract conformance and fertility. **It is not a safety claim.**
+A gate is not a sandbox: malicious-but-conformant source passes V2 and V3. Hosts that need
+safety MUST add their own analysis to the gate.
 
 **V3 · Fertility.** The ring MUST itself be a valid parent for a further generation. A
 ring that loads but can never be adapted again is a dead end and MUST NOT be activated.
@@ -182,6 +203,16 @@ A `pinned` locus MUST resolve to genesis regardless of what has been activated, 
 host MUST refuse to activate a ring on it. Recording rings remains permitted. This lets
 an operator freeze a compliance-critical agent at its factory source for life while an
 adjacent agent adapts continuously.
+
+### 5.7 `molt.trust` — the anchor V1 depends on
+
+```json
+{ "kind": "molt.trust", "payload": { "gate": "<verifier rappid>", "note": "…" } }
+```
+
+Recorded deliberately by an operator, never inferred from a verdict that appears. A gate's
+rappid MUST be minted once (rapp/1 §6.2) and stay stable, or trust cannot be expressed:
+a value re-minted per verdict is a value nobody can vouch for in advance.
 
 ## 6. Resolution and composition
 
@@ -241,4 +272,5 @@ A **Host** additionally implements §5.4–5.6, §6, §7 and MUST fail closed pe
 A **Gate** implements §5.3 including V2, V3, V4, and MUST NOT be co-resident with the
 authority of the candidate it judges.
 
-An implementation claiming rapp-molt/0 MUST pass [`conformance.py`](conformance.py).
+An implementation claiming rapp-molt/0 MUST pass
+[`tools/conformance_molt.py`](../tools/conformance_molt.py) (28/28 at time of writing).

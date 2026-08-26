@@ -75,8 +75,30 @@ try:
     except ValueError as e:
         check("C5 self-issued verdict refused (V1 structural)", True, str(e)[:60])
 
+    # C5b · THE REAL V1 TEST: forge from an ARBITRARY stream that is not the host's.
+    # The original C5 only forged using the host's OWN stream_id — the single case the
+    # code already rejected — so it certified a claim far weaker than the spec's text.
+    # Found by adversarial audit 2026-08-26; the attack below DID activate before the fix.
+    forged2 = tmp / "forged2.jsonl"
+    molt._append(forged2, "molt.verdict", "verdict:@attacker/anything",
+                 {"ring": r1["frame_hash"], "verdict": "pass", "checks": {},
+                  "gate": "rappid:@attacker/self:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"})
+    try:
+        molt.activate(a, forged2, 1); check("C5b forged verdict from an arbitrary stream refused", False)
+    except ValueError as e:
+        check("C5b forged verdict from an arbitrary stream refused (V1)", True, str(e)[:52])
+
+    # C5c · activation with NO trusted gate recorded must fail closed
+    nt = tmp / "nt.jsonl"; molt.genesis(nt, "planner", FERTILE)
+    ntr = molt.ring(nt, ADAPTED, "x"); ntv = tmp / "ntv.jsonl"; molt.judge(ntv, nt, 1, ADAPTED)
+    try:
+        molt.activate(nt, ntv, 1); check("C5c no trusted gate = refused", False)
+    except ValueError:
+        check("C5c no trusted gate recorded = activation refused (V5)", True)
+
     # C6 · a real gate passes a fertile ring, and activation then succeeds
     v = molt.judge(va, a, 1, ADAPTED)
+    molt.trust(a, v["payload"]["gate"], "conformance gate")
     check("C6a gate passes a fertile, matching ring", v["payload"]["verdict"] == "pass",
           v["payload"]["detail"][:60])
     act = molt.activate(a, va, 1)
@@ -89,6 +111,7 @@ try:
     rs = molt.ring(d, STERILE, "flatten to a dict")
     vd = tmp / "vd.jsonl"
     vs = molt.judge(vd, d, 1, STERILE)
+    molt.trust(d, vs["payload"]["gate"], "conformance gate")
     check("C7a gate FAILS a sterile ring (V3)", vs["payload"]["verdict"] == "fail",
           vs["payload"]["checks"].get("fertility"))
     try:
@@ -102,13 +125,28 @@ try:
 
     # C9 · policy: pinned refuses activation and resolves to the floor (§5.6)
     e = tmp / "e.jsonl"; molt.genesis(e, "compliance", FERTILE)
-    re_ = molt.ring(e, ADAPTED, "adapt"); ve = tmp / "ve.jsonl"; molt.judge(ve, e, 1, ADAPTED)
+    re_ = molt.ring(e, ADAPTED, "adapt"); ve = tmp / "ve.jsonl"
+    _ve = molt.judge(ve, e, 1, ADAPTED)
+    molt.trust(e, _ve["payload"]["gate"], "conformance gate")
     molt.set_policy(e, "pinned")
     try:
         molt.activate(e, ve, 1); check("C9a pinned locus refuses activation", False)
     except ValueError:
         check("C9a pinned locus refuses activation (§5.6)", True)
     check("C9b pinned locus resolves to the floor", molt.resolve(e)["at_floor"] is True)
+
+    # C14 · the gate's identity is minted once, not per verdict (rapp/1 §6.2)
+    g1 = molt.judge(va, a, 1, ADAPTED)["payload"]["gate"]
+    g2 = molt.judge(va, a, 1, ADAPTED)["payload"]["gate"]
+    check("C14 gate rappid is stable across verdicts (§6.2 mint-once)", g1 == g2, g1[:38])
+
+    # C15 · V2 checks the contract genesis RECORDED, not merely that the source parses
+    cc = tmp / "cc.jsonl"; molt.genesis(cc, "x", FERTILE, contract="rapp/brainstem-agent")
+    molt.ring(cc, ADAPTED, "no perform() method")
+    ccv = tmp / "ccv.jsonl"
+    vcc = molt.judge(ccv, cc, 1, ADAPTED)
+    check("C15 V2 fails a ring that misses its recorded contract",
+          vcc["payload"]["checks"].get("contract") == "fail", vcc["payload"]["detail"][:56])
 
     # C10 · a molt chain is a FRAME chain — verified with no molt code in the loop
     plain_ok, seen = True, 0
