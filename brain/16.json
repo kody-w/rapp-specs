@@ -1,0 +1,19 @@
+{
+  "spec": "rapp/1",
+  "kind": "brain.page",
+  "stream_id": "brain:@kody-w/rapp-specs",
+  "seq": 16,
+  "utc": "2026-08-27T15:19:03.767Z",
+  "payload": {
+    "slug": "specs/rapp-molt-0",
+    "title": "rapp-molt/0 — a rapp/1 profile for self-modifying agents",
+    "sha256": "f470b3e74c1f281a0f923433b79afec63ade62ea612b404b2b1a1c9c6fb4970a",
+    "tick": 316,
+    "tick_frame": "c036ca8e3335288b69ef6f18995cfcebbdad1222a10bb2c987a9eb59ff4a0cf5"
+  },
+  "payload_hash": "ae7a15050c58a0f7fb1015817985581c552a137ca1bde3702c278acf5c41dbe3",
+  "prev": "3bb7cc34cdbdf9c0e9fa02617b2a5415a9ea1dc758ca5107b0f31ab1d79fa9ba",
+  "prev_wave": null,
+  "sig": null,
+  "frame_hash": "7f5d38f8d5960e7ec4a93daed933fc4300b3831dcbea37fdc1a7a275e4bf2e84"
+}
