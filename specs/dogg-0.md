@@ -82,6 +82,95 @@ chains it came from. Resolution is layered and offline-first: local mirrors befo
 network. An agent that has ever cloned a chain can re-summon its tiles with no internet
 at all; a memorized minimal chant plus any reachable mirror reconstructs the rest.
 
+### The spellbook — chants of any length (the AI tweet)
+
+The physics, stated plainly: seven words (~64 bits) can *name* a stream; no chant can carry
+observations it does not contain. **Frames need a source. Tiles can live in words. Programs
+can live in seeds.** The harder the spell, the longer the chant — there is no fixed length.
+
+**What is cached, and what never has to be.** A device carries the *machinery* — the
+permanent 1024-word list, this grammar, the reference client and verifier (a few dozen
+kilobytes, versioned, cacheable forever). It never has to carry the *ore*: numbers arrive in a
+chant or from any frame at hand, and everything is verifiable either way.
+
+One codec for every chant — words are 10-bit symbols; a chant is a self-describing stream:
+
+```
+word 0   header   2 version | 3 kind | 5 reserved
+word 1   length   10 bits: number of body words (≤ 1023 per chant; a chant book is many chants)
+body     kind-specific, big-endian, zero-padded to a word boundary
+last     checksum 10 bits of sha256(header|length|body) — one misheard word refuses
+```
+
+Four kinds, one wordlist:
+
+| kind | carries | body | offline result |
+|---|---|---|---|
+| **SEED** (4) | a *program*, no data | 12 dimension id · ops (3-bit op + operands), read until the last full op | the cached SDK compiles it; `wear` runs it on any frame of that dimension → exact tile |
+| **LENS** (2) | one fixed algorithm, no data | 12 dimension id · 6 lens id · params | `wear` on a frame → exact tile |
+| **MISSION** (1) | a lens **plus a snapshot** | 12 dim · 20 tick · 18 hash prefix · 12 field mask · 14 bits per field (log-quantized, 1e-6 … 1e15, ~0.3%) | `recite` → a limited tile with nothing but the wordlist; `attest` proves any full frame against the words |
+| **BOOK** (3) | exact bytes | 16 length · zlib(JSON) | `recite` → the tile itself, byte-exact (a 1.2 KB frame ≈ 450 words — a page) |
+
+The seed grammar (every bit sequence is a valid program, like every Minecraft seed is a world):
+
+```
+0 select f        1 delta f          2 ratio a b        3 above f thr
+4 below f thr     5 sum a b          6 change_pct f     7 max_of a b
+f, a, b: 4-bit index into the dimension's field table (chants/MISSIONS.json); thr: 14-bit log code
+```
+
+Verdicts for `attest`: **MATCH** · **DIFFERENT-TICK** · **FORGED** · **FORGED-OR-FOREIGN** ·
+**FRAME-INVALID**. A seed or lens cut for one dimension refuses to be worn on another. Any tile
+can be **hotloaded** into a brainstem as a single-file cartridge that names its own limits.
+
+**The registry is append-only; readers de-duplicate.** A dimension registered more than once keeps every frame on the chain; clients resolve each dimension to its newest registry frame (last write wins). Nothing is ever removed from the chain.
+
+**Summonable means reduced.** A dimension is *orientable* the moment it is on the registry.
+It is *summonable* only when it has declared its own reduction — `mission.json` at the node's
+root: up to twelve positive magnitudes of its frame that are mission-critical, in a fixed
+append-only order (the first three ride the default mission chant), plus any procedures that
+ride as BOOK chants. The node owns that judgment; the spine folds it into the kit
+(`tools/register.py`, `--sync`). A dogg that has not said what matters most about itself
+cannot be summoned offline — only found.
+
+```json
+{ "schema": "dogg/0-mission", "dimension": "water:@kody-w/dogg-water",
+  "fields": [ {"name": "gauge_height_ft", "path": "water.gauge_height_ft", "unit": "ft"} ],
+  "default": ["gauge_height_ft", "pct_of_flood_stage", "procedure_version"],
+  "books": ["water/procedure.json"] }
+```
+
+**Carriers — the same bits, four ways.** Spoken or memorized **words**; a dense **URI**
+`dogg:<version>:<n words>:<base64url of the symbol stream>`; a **QR** (any phone scans one square
+of ≤ ~300 characters reliably — longer chants page as `dogg:<v>:<n>:<p>/<t>:<chunk>`, reassembled
+in any order); and a printed **chant book**: one square per chant with the words under it, so a
+phone scans it and a human can still read it aloud. Worst case is paper.
+
+**Worn tiles — NFC / RFID.** A tag is a carrier like paper: it holds the `dogg:` URI as one
+NDEF well-known URI record (`dogg.py ndef` emits the bytes). Tap a wristband, a ring, a sticker
+on a door, and the reader holds the chant — the person is the summon. Sizing is honest: an
+NTAG213 (~144 B) carries a mission or a seed; an NTAG216 (~888 B) carries a whole BOOK frame;
+ISO15693 / DESFire tags carry a chant book. Longer chants page exactly as QR does, one page per
+tag, reassembled in any order.
+
+**The codebook is append-only.** `chants/CODEBOOK.lock` pins sha256 of the word list, the op
+table and every dimension's field table; `dogg.py check` (run in CI) refuses drift and refuses
+two dimensions sharing a 12-bit id. Words, ops and fields may be *appended*, never reordered or
+removed — a reorder would silently re-mean every chant ever spoken. Header version 3 is
+reserved as the escape to an extended header (16-bit dimension ids, more kinds).
+
+**Refusals, not silences.** A mission field that is negative is refused at mint (mission fields
+are positive magnitudes until a signed type exists). A BOOK page decompresses to at most 1 MiB.
+A length that does not match its declaration, a checksum that does not match, a seed or lens
+worn on the wrong dimension — all refuse. `chants/VECTORS.json` carries golden vectors: a
+second implementation must reproduce those exact words from the fixture frame.
+
+**The kit.** `dogg.py kit <dir>` exports the whole machinery — client, verifier, word list,
+field tables, lenses, lock — the only thing a device ever needs cached.
+
+Reference client: `dogg.py seed | lens | mission | inscribe` to mint · `recite` (any kind, offline; words or URI)
+· `wear W… frame.json [prev.json]` · `attest W… frame.json` · `hotload W… [--into DIR]` · `uri` · `book out.html …` · `kit <dir>` · `lock` · `check`.
+
 High-frequency chains use **sealed epoch bundles + a flat tail** so directories stay
 bounded forever: `HEAD.json` carries `epoch_size` (E) and `sealed_epochs` (K); frames
 `0 … K·E−1` live in `epochs/<k>.jsonl` (one frame per line, written once, never
