@@ -1,7 +1,7 @@
 # The RAPP Protocol Suite
 ### Unified normative specification of identity, canonicalization, the frame, the wire, and the egg
 
-**Status:** Draft standard for ratification (Kody, estate owner). **rev-6.** **Obsoletes / consolidates:**
+**Status:** Draft standard for ratification (Kody, estate owner). **rev-10.** **Obsoletes / consolidates:**
 `rapp-frame/2.0`, `rapp-frame/2.1`, `rapp-rappid-spec/2.0`, `rapp-protocol/1.0`, all scattered egg specs
 (§9 subsumes them), and `OSI.md`. On ratification this is the single living standard; the consolidated
 specs become retired historical record (Federal Constitution Art. X).
@@ -45,6 +45,10 @@ sequence sharing one `stream_id`. **particle / wave** — a frame's two domain-s
 payload-hash / whole-frame-hash (§7.3). **canonical form** — the one [RFC 8785] byte string for a value
 (§4). **legacy form** — any other historical encoding; legacy is drift and **MUST** be migrated out
 (Fed. Const. Art. III), except sealed re-genesis history (§12.1).
+**Grail kernel** — an estate-declared, byte-pinned runtime substrate. Its `grail_id` is
+`"grail:" || Hb("rapp/1:grail", kernel_bytes)`; repository, immutable ref, commit, path, raw SHA-256,
+and byte length are provenance and verification data, not alternate identities. Once activated through
+§13.3, those bytes are permanent (Protocol Constitution Art. 15); capabilities evolve outside them.
 
 ## 4. Canonicalization (L1)
 `canonical(v)` is the UTF-8 byte string produced by **[RFC 8785] JCS** for the value `v`, defined **only**
@@ -79,7 +83,8 @@ H(space, v) = lowercase_hex( SHA-256( utf8(space) || 0x0A || canonical(v) ) )   
 Hb(space, b) = lowercase_hex( SHA-256( utf8(space) || 0x0A || b ) )                ; b raw octets
 ```
 `space` is an exact ASCII tag, none containing `0x0A`: `"rapp/1:particle"`, `"rapp/1:wave"`, `"rapp/1:egg"`,
-`"rapp/1:egg-manifest"`, `"rapp/1:rappid"`, `"rapp/1:seal"`. A tag is used by either `H` or `Hb`, never
+`"rapp/1:egg-manifest"`, `"rapp/1:rappid"`, `"rapp/1:grail"`, `"rapp/1:seal"`,
+`"rapp/1:sealed-aad"`, `"rapp/1:sealed-key-request"`. A tag is used by either `H` or `Hb`, never
 both. Output is always exactly 64 lowercase hex, **never truncated or uppercased**. Two values
 are treated as the same object iff their same-space hashes are equal; SHA-256 collision resistance
 [FIPS 180-4] is a security assumption of this standard (§14). A `name/X.Y` label is never identity — only
@@ -287,7 +292,10 @@ variants). The manifest is a §4 value with exactly these members:
   `hash = Hb("rapp/1:egg", file_octets)` (§5) over the raw stored octets. `contents` is **always present**;
   for JSON (pointer/session) variants it **MUST** be exactly `[]`.
 - `path` **MUST** be a relative POSIX path: `/`-separated NFC UTF-8 segments, no `.`/`..` segment, no
-  leading `/`, no backslash, no duplicate `path` in one manifest. `contents` **MUST** be sorted ascending
+  leading `/`, no backslash, no Windows drive-qualified first segment (`ALPHA ":"`), no duplicate `path`
+  in one manifest. A segment **MUST NOT** end in a period/space, contain `:`, contain a C0 control, or have
+  a case-insensitive basename equal to `CON`, `PRN`, `AUX`, `NUL`, `COM1`–`COM9`, or `LPT1`–`LPT9`.
+  `contents` **MUST** be sorted ascending
   by the UTF-8 bytes of `path`.
 - `payload` is a §4 object (variant-specific). `sig` is a §10 JWS over `canonical(manifest \ {sig})`, or
   `null`. For the `invite` variant `sig` is REQUIRED and **MUST** verify with `kid` in the §13.2 estate-owner
@@ -317,10 +325,137 @@ variants). The manifest is a §4 value with exactly these members:
 | `invite` | JSON | a QR-sized pointer (**no packed files**) | `payload` = `{target_rappid:<rappid>, target_url:<string>, target_kind:("neighborhood" / "estate")}`; contents `[]`; `sig` REQUIRED |
 | `neighborhood` | ZIP | several organisms meant to live together | `payload` = `{members:[<rappid>,…]}`; contents = one sub-egg per member, named `<owner>--<slug>.egg` at the root, matched by the sub-egg manifest's `rappid` == the `payload.members[]` entry |
 | `estate` | ZIP | several neighborhoods | `payload` = `{neighborhoods:[<rappid>,…]}`; contents = one sub-egg per neighborhood, named `<owner>--<slug>.egg` at root, matched by sub-egg `rappid` |
+| `sealed` | ZIP | publicly mirrorable ciphertext with scoped key release | contents MUST be exactly `ciphertext.bin`; payload is the closed `rapp-sealed-artifact/1` profile in §9.2.1; `sig` REQUIRED |
 
 The QR-sized invite that caused EGG-01 is the **`invite`** variant: a signed pointer object, not a
 member-packing `neighborhood` egg. The banned legacy stamps (`brainstem-egg/2.3-neighborhood`,
 `neighborhood-egg/1.0`) migrate to `{schema:"rapp/1-egg", variant:"invite" / "neighborhood"}` (Art. III).
+
+### 9.2.1 Sealed artifact profile
+
+The `sealed` variant lets any unauthenticated mirror, including a commit-pinned
+`raw.githubusercontent.com` URL, distribute an encrypted artifact globally without distributing its
+decryption key.
+
+The public bytes are **ciphertext, not access control**. Bytecode or obfuscation alone provides no
+confidentiality. A conformant producer **MUST** use a random 256-bit data-encryption key (DEK) per artifact,
+**MUST NOT** embed that DEK or a shared master key in the egg/client/URL, and **MUST NOT** place a password
+in a URL. A password, passkey, device assertion, or account credential may authenticate to the key service;
+it is not the artifact encryption key.
+
+The ZIP contents are exactly one file:
+
+```text
+ciphertext.bin = AES-256-GCM ciphertext || 16-byte authentication tag
+```
+
+The manifest `payload` has exactly:
+
+```json
+{
+  "schema": "rapp-sealed-artifact/1",
+  "cipher": "A256GCM",
+  "nonce": "<12 bytes, unpadded base64url>",
+  "plaintext_commitment": "<64hex>",
+  "plaintext_bytes": 1234,
+  "media_type": "application/wasm",
+  "key_id": "<64hex>",
+  "key_service_rappid": "rappid:@owner/key-service:64hex",
+  "key_service_url": "https://keys.example.com/chat",
+  "access": "scoped-key-release",
+  "aad_hash": "<64hex>"
+}
+```
+
+`plaintext_commitment` is a keyed commitment that cannot be tested without the DEK:
+
+```text
+prk = HMAC-SHA-256(32 zero octets, DEK)
+commitment_key = HMAC-SHA-256(prk, utf8("rapp/1:sealed-commitment") || 0x01)
+plaintext_commitment = lowercase_hex(HMAC-SHA-256(commitment_key, plaintext_octets))
+```
+
+This is the [RFC 5869] HKDF-Extract/HKDF-Expand construction with an empty salt, one 32-byte output block,
+and the exact info string `rapp/1:sealed-commitment`. The commitment is public but does not permit an
+offline dictionary attack without the random 256-bit DEK.
+
+The exact authenticated-data descriptor is:
+
+```json
+{
+  "schema": "rapp-sealed-artifact/1",
+  "artifact_rappid": "<manifest.rappid>",
+  "created_utc": "<manifest.created_utc>",
+  "key_id": "<payload.key_id>",
+  "plaintext_commitment": "<payload.plaintext_commitment>",
+  "plaintext_bytes": 1234,
+  "media_type": "<payload.media_type>"
+}
+```
+
+`aad_hash = H("rapp/1:sealed-aad", descriptor)`, and `canonical(descriptor)` is supplied as AES-GCM
+additional authenticated data. `nonce` decodes to exactly 12 bytes. `plaintext_bytes` is an integer from
+zero through `2^30` (1 GiB), a RAPP safety ceiling below both the [NIST SP 800-38D] per-invocation limit
+and the deterministic non-ZIP64 container boundary.
+`ciphertext.bin` length is exactly `plaintext_bytes + 16`. The sealed egg's manifest signature is REQUIRED
+and verifies per §10 with `kid` exactly equal to `manifest.rappid`. A sealed artifact therefore uses a
+keyed §6.2 rappid controlled by its authorized publisher; another valid registry key cannot sign on its
+behalf.
+
+`key_service_rappid` identifies the RAPP organism authorizing key release. `key_service_url` is its absolute
+HTTPS §8 `POST /chat` URL and **MUST** end in `/chat`. The URL is location, not authority: the service
+response is accepted only when its signatures and identifiers bind to `key_service_rappid`.
+
+The caller sends the following canonical JSON object as the `user_input` string:
+
+```json
+{
+  "schema": "rapp-sealed-key-request/1",
+  "egg_hash": "<64hex>",
+  "key_id": "<64hex>",
+  "recipient_rappid": "rappid:@owner/device:64hex",
+  "recipient_spki_der_b64": "<standard base64>",
+  "request_nonce": "<64hex>",
+  "expires_utc": "YYYY-MM-DDTHH:MM:SS.mmmZ",
+  "sig": "<recipient detached JWS>"
+}
+```
+
+`sig` is over `canonical(request \ {sig})` and verifies under `recipient_rappid`; `egg_hash` is the §9.1
+sealed egg address. The key service verifies entitlement, exact `(egg_hash,key_id)`, request expiry,
+recipient key binding, and nonce non-reuse.
+
+The §8 `response` string is canonical JSON:
+
+```json
+{
+  "schema": "rapp-sealed-key-release/1",
+  "egg_hash": "<request.egg_hash>",
+  "key_id": "<request.key_id>",
+  "recipient_rappid": "<request.recipient_rappid>",
+  "request_hash": "<H('rapp/1:sealed-key-request', request without sig)>",
+  "wrap_alg": "ECDH-ES+A256KW",
+  "wrapped_key_jwe": "<JWE Compact Serialization>",
+  "issued_utc": "YYYY-MM-DDTHH:MM:SS.mmmZ",
+  "expires_utc": "YYYY-MM-DDTHH:MM:SS.mmmZ",
+  "service_sig": "<key-service detached JWS>"
+}
+```
+
+`service_sig` is over `canonical(release \ {service_sig})` and verifies under `key_service_rappid`.
+`wrapped_key_jwe` uses [RFC 7516] with `alg:"ECDH-ES+A256KW"` and `enc:"A256GCM"` for the declared
+recipient SPKI. The service **MUST NOT** return a global raw DEK. Authorization, expiry, device scope, and
+key rotation are service policy recorded in signed frames, not fields that alter the sealed egg's content
+address.
+
+A mirror URL **SHOULD** be immutable (for GitHub Raw, pin a commit SHA rather than a moving branch). URL
+secrecy is never assumed: integrity comes from the egg address and signature, confidentiality from
+AES-GCM, and use authorization from scoped key release.
+
+Revocation prevents future key release. It cannot erase ciphertext or plaintext already downloaded and
+decrypted by an authorized recipient. A conformant product **MUST** state this limit plainly. It also
+**MUST NOT** claim that encrypted bytecode cannot be inspected after decryption; legal/license controls and
+bounded server authority remain separate from cryptographic confidentiality.
 
 ### 9.3 Conformance
 - **Producer** **MUST** emit only `schema:"rapp/1-egg"` with a variant from §9.2, a §6.1 rappid, and, for
@@ -389,6 +524,60 @@ not authorship).
   repairs/reparents/rolls back (§7.6).
 - **Router/Mirror:** invents no endpoints (§8), declares subordination to `kody-w/RAPP` (Fed. Const.
   Art. VII), serves only provenance-stamped hash-matching mirrors (Art. VIII).
+
+### 11.1 Immutable Grail kernel conformance
+An estate declares a Grail kernel through the exact §13.3 `grail-kernel` entry. Its `release_scope`
+selects the release family to which the pin applies; a registry **MUST** contain at most one
+`grail-kernel` entry for any release scope. Its entry-level `sig`
+**MUST** verify under `declared_by`, which **MUST** be the estate owner in effect at `activated_utc`
+(§13.2); `activated_utc` **MUST NOT** be more than 300 seconds after the verifier's first-seen time for
+that entry. The pin activates locally when a consumer first accepts an authenticated, non-rollback
+registry containing that valid declaration. Until then it is structural evidence only. The Grail is
+identified by `grail_id`, never by a mutable branch, tag, repository name, or product label. Once
+activated, the pin is a permanent compatibility anchor, not a moving release channel:
+
+1. Every conformance evaluation **MUST** receive `release_scope` from an authenticated owner-controlled
+   release policy, never from candidate bytes or candidate-controlled configuration, then resolve its
+   one `grail_id` exclusively from the activated, persisted §13.3 binding. If the policy repeats
+   `grail_id`, that value is only a consistency assertion and **MUST** byte-equal the registry result; it
+   cannot select or rebind the pin. Every ring and release/deployment stage, including development,
+   qualification, Preprod, installation, and production verification, **MUST** compare the candidate's
+   Grail path to that exact binding, SHA-256, and byte length.
+2. A missing, changed, substituted, or unmeasured Grail byte is `kernel-drift` and **MUST** fail closed.
+   Approval, urgency, compatibility claims, and semantic equivalence cannot waive byte inequality.
+3. A pipeline **MUST NOT** silently restore the pinned file after testing a different file. The exact
+   release-shaped artifact containing the immutable Grail bytes **MUST** itself pass the release gates.
+4. Every gate **MUST** resolve every archive, container, wrapper, environment override, symlink, and
+   filesystem indirection to one regular runtime entry-point file under the immutable release root;
+   refuse links and ambiguous alternatives; verify its bytes; and bind the release digest, resolved
+   entry-point path, `release_scope`, `grail_id`, raw SHA-256, and byte length into its evidence.
+5. Every gate that executes the kernel **MUST** bind verification atomically to execution from a sealed
+   immutable object or snapshot. An already-open descriptor is sufficient only when its backing bytes
+   are under platform-enforced write exclusion for the entire verification-through-consumption interval
+   and the interpreter/loader consumes that exact descriptor without reopening a pathname. An immutable
+   content-addressed release root is sufficient only when no concurrent principal can modify it. A
+   hash-then-path-launch without one of those guarantees is nonconformant. At least one execution gate for
+   every supported production platform **MUST** perform this proof before release approval. Merely
+   carrying an unused matching file is insufficient. A stored transpiled, bundled, generated, or patched
+   derivative is different kernel bytes and requires a new `grail_id`; ordinary interpreter/JIT
+   compilation directly from the pinned bytes is permitted when no alternate stored kernel is selected.
+6. New implementation behavior **MUST** live outside the Grail kernel and **MUST NOT** alter any
+   RAPP-visible canonical form or wire semantic except through the registration and evolution rules of
+   §§7, 9, 12, and 13.
+7. If required behavior cannot be expressed outside the pin, the implementation **MUST** report an
+   incompatibility. It **MUST NOT** edit the Grail and continue under the same identity.
+8. Different kernel bytes produce a different `grail_id` and therefore are a different Grail. A new
+   `grail-kernel` entry may coexist and may name the old `grail_id` as `predecessor`, but it **MUST NOT**
+   overwrite, retag, alias, or redefine the prior Grail. A successor uses a new `release_scope`; an
+   existing scope is never rebound. A non-null `predecessor` **MUST** name an earlier accepted
+   `grail-kernel` entry and **MUST NOT** form a cycle. A registry **MUST** contain at most one
+   `grail-kernel` entry for each `grail_id`.
+9. On first activation a consumer **MUST** persist the full canonical `grail-kernel` entry. Every later
+   accepted registry **MUST** retain that entry byte-for-byte. Removal, mutation, or a second entry for
+   the same `grail_id` is a permanent `kernel-drift` refusal even when `registry_seq` increased.
+
+This rule governs release topology rather than the §8 wire shape, so it does not add a frame member,
+endpoint, compatibility shim, or alternate `rapp/1` encoding.
 
 ## 12. Versioning, evolution, no-legacy
 RAPP is a **living standard** (WHATWG): revised in place, never forked into parallel versions; a `name/X.Y`
@@ -472,6 +661,24 @@ The registry is an I-JSON document; every entry is append-only (never removed/re
 - **re-anchor** `{type:"re-anchor", old_rappid, new_rappid, case:("upgrade"|"rotation"|"compromise"|"tag-migrate"),
   utc, sig, old_key_sig?}` — `sig` owner-signed; `old_key_sig` a §10 JWS by the **old** key over
   `canonical(entry \ {sig,old_key_sig})`, REQUIRED for `case:"rotation"`. This is the normative succession record (§13.2).
+- **grail-kernel** `{type:"grail-kernel", release_scope, grail_id, repository, immutable_ref,
+  object_format, commit, path, mode, blob, sha256, size_bytes, activated_utc, predecessor, declared_by,
+  sig}` — exactly these members. `release_scope` is an absolute HTTPS URI selected by the estate owner;
+  no two entries may share it. `grail_id` is
+  `"grail:" || Hb("rapp/1:grail", kernel_bytes)`; `repository` is an absolute HTTPS URI;
+  `immutable_ref` is a full `refs/tags/...` name that **MUST** resolve exactly to `commit`;
+  `object_format` is `"sha1"` or `"sha256"` and fixes the required lowercase hexadecimal length of
+  `commit` and `blob`; `path` at `commit` **MUST** resolve through the repository tree to exactly one
+  regular blob with `mode` `"100644"` or `"100755"` and object id `blob`;
+  `path` is a relative NFC POSIX path with no empty, `"."`, or `".."` component; `sha256` is the raw
+  kernel bytes' 64-lowercase-hex SHA-256; `size_bytes` is their positive `uint53` length;
+  `activated_utc` has the exact §7.4 form; `predecessor` is null or another `grail_id`; `declared_by` is
+  a keyed rappid; and `sig` is a detached §10 JWS whose protected `kid` equals `declared_by`, over
+  `canonical(entry \ {sig})`. The entry is additionally covered by the registry's §13.1 signature. A
+  consumer verifies the entry signer as the estate owner in effect at `activated_utc`, verifies the
+  referenced bytes, recomputes both hashes, persists the canonical entry on first activation, applies
+  §11.1, and refuses a missing/mutated prior binding, duplicate `grail_id`, or locator whose bytes
+  disagree.
 - **estate_owner** `{type:"estate_owner", rappid}` (exactly one non-deprecated) · **master-plan**
   `{type:"master-plan", repo, path}` (Fed. Const. Art. VII).
 
@@ -502,17 +709,47 @@ tenure are time-scoped, and both are monotone given the §13.1 no-rollback rule.
   as earlier) and bias UTC-first merges. A consumer **SHOULD** refuse a frame whose `utc` exceeds receipt
   time by >300 s, and adversarial-scope merges **SHOULD** rank by `min(utc, first-seen)`; a bricked stream
   converges by re-genesis (§12.1).
+- **Sealed-artifact limits:** a public mirror sees ciphertext and metadata. AES-GCM protects confidentiality
+  only while the DEK remains secret; a recipient that has lawfully decrypted plaintext can copy it.
+  Revocation stops future wrapped-key release, not prior possession. Shared passwords, embedded master keys,
+  moving-branch URLs, nonce reuse under one DEK, and claims that bytecode cannot be inspected after
+  decryption are non-conformant security postures (§9.2.1).
+- **Kernel substitution:** testing mutable ring bytes and restoring the Grail only after approval creates
+  an untested release. §11.1 requires the release-shaped artifact to contain the pinned bytes before its
+  tests, attestations, and approval; a digest mismatch is a blocking `kernel-drift` finding.
+- **Kernel registry rollback/rebinding:** persisting only `registry_seq` does not preserve an activated
+  Grail declaration across a malicious higher-sequence registry. Consumers also persist every activated
+  canonical `grail-kernel` entry and reject its later removal, mutation, or duplication (§11.1).
 
 ## 15. References
 [RFC 2119] [RFC 8174] requirement terms · [RFC 8259] JSON · [RFC 7493] I-JSON · [RFC 8785] JCS ·
 [FIPS 180-4] SHA-256 · [RFC 3986] URI · [RFC 5234] ABNF · [RFC 7405] case-sensitive ABNF · [RFC 9562] UUID
 (obsoletes RFC 4122) · [RFC 5280] X.509 SPKI · [RFC 7515] JWS · [RFC 7797] unencoded JWS payload ·
 [RFC 7518] JWA/ES256 · [RFC 8037] EdDSA in JOSE · [RFC 6979] deterministic ECDSA · [RFC 3339] timestamps ·
-[ECMA-262] ECMAScript.
+[NIST SP 800-38D] AES-GCM · [RFC 2104] HMAC · [RFC 5869] HKDF · [RFC 7516] JWE · [ECMA-262] ECMAScript.
 
 ---
 
 ### Revision log
+- **rev-10 (sealed artifact + Grail execution closure)** — registered the `sealed` egg variant for
+  globally mirrorable public ciphertext with signed manifests and scoped recipient key release (§9.2.1);
+  added the `rapp/1:sealed-aad` and `rapp/1:sealed-key-request` address spaces; retained rev-9's exclusive
+  `release_scope` selection, persisted Grail binding, and verification-to-execution protections; and made
+  both confidentiality limits and kernel drift release-blocking.
+- **rev-9 (Grail selection and execution closure)** — makes release policy select only
+  `release_scope`, resolves `grail_id` exclusively through the activated persisted registry binding,
+  and closes verification-to-execution races by requiring a sealed immutable object/snapshot or
+  platform-enforced write exclusion through byte consumption.
+- **rev-8 (immutable Grail closure)** — makes pin selection deterministic through `release_scope`,
+  defines the exact signed §13.3 `grail-kernel` entry and owner-at-time activation, requires consumers
+  to persist every accepted binding, and specifies repository-object and executed-entry-point
+  verification across interpreted and derived runtimes.
+- **rev-7 (immutable Grail constitution)** — defines the Grail kernel by the SHA-256 of its exact bytes
+  (§3), makes every ring and release/deployment stage verify both the pin and the actually executed entry
+  point (§11.1), forbids post-test substitution, and makes changed bytes a different Grail rather than a
+  mutation. This is release governance only; the RAPP wire and existing canonical forms are unchanged.
+- **rev-6 (instantiation lineage)** — added §9.4's fresh per-install instance identity and immutable
+  `grown_from` lineage, closing the hatch seam without changing the frame or egg envelopes.
 - **rev-5 (war-game round 3 fold)** — folded 5 blockers + 7 majors + 7 minors, all clustered on the trust
   model that rev-4's fixes made load-bearing: the **registry is now a signed root of trust** (§13.1) —
   owner-signed, anchored to the out-of-band `estate_owner` rappid fingerprint, `registry_seq`-monotonic,
