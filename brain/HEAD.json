@@ -1,8 +1,8 @@
 {
-  "count": 46,
+  "count": 49,
   "stream_id": "brain:@kody-w/rapp-specs",
-  "head_frame": "e629a599bc8cbeb12cab2409a2b35f5e6062c520c7b742202280926d66c78324",
-  "updated": "2026-09-03T08:59:04.621Z",
+  "head_frame": "95fdbe413c3ce849ce6210524ec0a15f646befb146b218fbd1fb500c3ea8ddbd",
+  "updated": "2026-09-04T08:53:54.185Z",
   "sealed_epochs": 0,
   "epoch_size": 288
 }
