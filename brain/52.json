@@ -1,0 +1,19 @@
+{
+  "spec": "rapp/1",
+  "kind": "brain.page",
+  "stream_id": "brain:@kody-w/rapp-specs",
+  "seq": 52,
+  "utc": "2026-09-06T08:43:06.930Z",
+  "payload": {
+    "slug": "estate/UPDATE-QUEUE",
+    "title": "UPDATE QUEUE — 2026-09-06T08:43Z",
+    "sha256": "9c155f322059c51868b883646e52d97d70ae8ccd6f22083a33114c5efcac8ca7",
+    "tick": 852,
+    "tick_frame": "45b14b08bd44880b8f085e8ca30cb46fa3fed3dfb21aa0ad91b97f8e0f5d6c2b"
+  },
+  "payload_hash": "dc905136b9e407c783faee5d08f5d163324433c62bd39c75b00d7553daad194e",
+  "prev": "f086d0092221e89827edc66b87136783f8114a57ca32ce7de6c4bc8bfa2fa0b7",
+  "prev_wave": null,
+  "sig": null,
+  "frame_hash": "ecc7c6f62cc5d929758765383fa7083ec8cc4608d4875e1e400c95980678cd17"
+}
