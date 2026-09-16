@@ -1,0 +1,19 @@
+{
+  "spec": "rapp/1",
+  "kind": "brain.page",
+  "stream_id": "brain:@kody-w/rapp-specs",
+  "seq": 85,
+  "utc": "2026-09-16T09:21:12.713Z",
+  "payload": {
+    "slug": "estate/census",
+    "title": "Estate census — 2026-09-16T09:21Z",
+    "sha256": "94d7820ef9a39693acc7ea307b10847000b6ed6c32850f90ae0c6525384789a2",
+    "tick": 922,
+    "tick_frame": "8a14a3f137297e7a84d1d0f1d576293ec8f58b236d98fe3706d2d2e9b9ce10c9"
+  },
+  "payload_hash": "558a84dd2f6e079bd482b8bf153d74d4a78f013bb758807d8df587553e3802fb",
+  "prev": "16c7ad11cf236daa28bc3acc54137dd94f2341905b97da5e599c4583e5a5562e",
+  "prev_wave": null,
+  "sig": null,
+  "frame_hash": "76eb64f2d05fdc9068438a25395c868e395fd97310c1af21a25da507fccbb157"
+}
