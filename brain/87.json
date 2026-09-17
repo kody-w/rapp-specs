@@ -1,0 +1,19 @@
+{
+  "spec": "rapp/1",
+  "kind": "brain.page",
+  "stream_id": "brain:@kody-w/rapp-specs",
+  "seq": 87,
+  "utc": "2026-09-17T09:30:22.149Z",
+  "payload": {
+    "slug": "estate/canon",
+    "title": "Canonical files across the estate — 2026-09-17T09:30Z",
+    "sha256": "0231777052601b6bf15c8339d2e19f6882b35d1cd5e8e92a2d97efc58173e83d",
+    "tick": 928,
+    "tick_frame": "79982435ba93f8749af984b397461a29e2fcedcbd17d922bea12cbb951a0729f"
+  },
+  "payload_hash": "64fc055a94f1f1c47287a3341279ffe406cb8a2b6023970760d52b17a8d8895b",
+  "prev": "076e38007e8aa57926816df378e665c07cb6187bceceef22aa2f168c6cbbf71e",
+  "prev_wave": null,
+  "sig": null,
+  "frame_hash": "bcd4649d60c9c058eec81f8a3ba2bc91e9d9406f0537240daba7ac9dc6142355"
+}
