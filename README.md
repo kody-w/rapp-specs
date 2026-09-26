@@ -1,5 +1,9 @@
 # rapp-specs — the global specs brain
 
+<!-- rapp1:network-header:start -->
+[![RAPP/1](https://kody-w.github.io/rapp-hive-public/portfolio/badges/rapp-specs.svg)](https://github.com/kody-w/rapp-hive-public/blob/main/portfolio/repos/rapp-specs.md) · **New to RAPP?** [Start here: get your Brainstem →](https://github.com/kody-w/rapp-installer#start-here)
+<!-- rapp1:network-header:end -->
+
 Every protocol of the ecosystem, in one clone, as a verifiable brain: rapp/1 (the
 envelope), dogg/0 (the network), rapp-brain/0 (knowledge as dimensions), cast/0
 (films), skill-jacket/0 (verifiable skills), and the dogg SKILL. Each spec's home repo
