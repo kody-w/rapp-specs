@@ -141,6 +141,10 @@ ride as BOOK chants. The node owns that judgment; the spine folds it into the ki
 (`tools/register.py`, `--sync`). A dogg that has not said what matters most about itself
 cannot be summoned offline — only found.
 
+The registrar appends each new field name only once, in first-seen order. Repeated
+declarations leave existing field metadata and indices unchanged and do not consume
+extra slots in the twelve-field table.
+
 ```json
 { "schema": "dogg/0-mission", "dimension": "water:@kody-w/dogg-water",
   "fields": [ {"name": "gauge_height_ft", "path": "water.gauge_height_ft", "unit": "ft"} ],
@@ -274,6 +278,15 @@ may evolve, versioned in this file.
 - **Hosts** are replaceable: every clone is a complete, verifiable backup; the spine
   head is anchored nightly into Bitcoin (OpenTimestamps, `anchors/ots/`), so integrity
   and firstness survive even the loss of every hosted copy's provenance.
+- **The notary** (`notary/`, stream `notary:@kody-w/global`) timestamps anyone's content
+  by digest alone. A digest submitted through the
+  [notarize form](../../issues/new?template=notarize.yml) becomes a `notary.digest` frame
+  keyed to the spine tick it was notarized at: a maintainer runs `tools/notarize.py`. The
+  frame names that tick by hash, so it cannot predate the tick. The notary head is then
+  stamped into Bitcoin (`ots stamp anchors/ots/notary-<seq>.txt`, the file holding the head
+  frame hash), and the nightly anchor upgrades every proof in `anchors/ots/` to a Bitcoin
+  attestation, so every digest up to that head provably existed by the attesting block.
+  Reveal content later and anyone verifies it by hashing.
 - **Chants** are self-contained here: the permanent 1024-word list is vendored at
   [`chants/WORDLIST.txt`](chants/WORDLIST.txt) — the mechanism depends on no other
   repository existing. (64-bit seeds: collision odds stay negligible below millions of
