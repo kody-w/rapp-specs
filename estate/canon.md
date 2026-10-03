@@ -1,4 +1,4 @@
-# Canonical files across the estate — 2026-10-02T10:34Z
+# Canonical files across the estate — 2026-10-03T09:55Z
 
 5 canonical file(s) carried by 117 repo(s) (source: rapp-map estate-map.json, built 2026-08-25).
 
